@@ -1,26 +1,62 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
-import HomeView from "../views/HomeView.vue";
 
 const routes: Array<RouteRecordRaw> = [
-  {
-    path: "/",
-    name: "home",
-    component: HomeView,
-  },
-  {
-    path: "/about",
-    name: "about",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
-  },
+    {
+        path: "/",
+        name: "Home",
+        component: () => import("@/layouts/HomeLayout.vue"),
+        children: [
+            {
+                path: "/",
+                name: "HomePage",
+                component: () => import("@/views/HomePage.vue"),
+            },
+            {
+                path: "/product/:id",
+                name: "ProductDetailsPage",
+                component: () => import("@/views/ProductDetails.vue"),
+            },
+        ],
+    },
+    {
+        path: "/auth",
+        name: "Auth",
+        component: () => import("@/layouts/AuthLayout.vue"),
+        children: [
+            {
+                path: "login",
+                name: "LoginPage",
+                component: () => import("@/views/LoginPage.vue"),
+            },
+            {
+                path: "register",
+                name: "RegisterPage",
+                component: () => import("@/views/RegisterPage.vue"),
+            },
+        ],
+    },
+    {
+        path: "/dashboard",
+        name: "Dashboard",
+        component: () => import("@/layouts/DashboardLayout.vue"),
+        meta: { requiresAuth: true },
+    },
+    {
+        path: "/:catchAll(.*)",
+        name: "NotFoundPage",
+        component: () => import("@/views/NotFoundPage.vue"),
+    },
 ];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes,
+    history: createWebHistory(),
+    routes,
+});
+
+const isAuthenticated = () => !!localStorage.getItem("userToken");
+router.beforeEach((to, from, next) => {
+    if (to.meta.requiresAuth && !isAuthenticated()) next("/login");
+    else next();
 });
 
 export default router;
